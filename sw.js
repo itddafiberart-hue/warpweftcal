@@ -1,4 +1,4 @@
-const CACHE_NAME = 'weavecalc-v3';
+const CACHE_NAME = 'weavecalc-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -13,9 +13,7 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.map(k => (k === CACHE_NAME) ? null : caches.delete(k))))
-  );
+  e.waitUntil(caches.keys().then(keys => Promise.all(keys.map(k => k === CACHE_NAME ? null : caches.delete(k)))));
 });
 
 self.addEventListener('fetch', (e) => {

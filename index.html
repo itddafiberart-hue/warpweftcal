@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>경사/위사 계산기</title>
+  <title>STUDIO ITDA WeaveCalc</title>
   <meta name="theme-color" content="#f7f7fb">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="STUDIO ITDA WeaveCalc">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <style>
@@ -35,7 +36,7 @@
     legend { font-size: 12px; color: var(--muted); padding: 0 6px; white-space:normal; }
     .legend-sub { display:block; margin-top: 4px; font-size:11px; }
     .result { font-size:16px; font-weight:700; padding:12px; background:#DCE6ED; border-radius:12px; display:flex; justify-content:space-between; align-items:center; width:100%; }
-    .result .small { font-weight:400; } /* ensure small text isn't bold */
+    .result .small { font-weight:400; }
     .badge { display:inline-block; padding:4px 8px; border-radius:999px; background:#f3f4f6; font-weight:700; font-size:14px; flex-shrink:0; }
     .equals { font-weight:700; }
     .nowrap-group { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; flex-shrink:0; }
@@ -131,14 +132,12 @@
   </div>
 
   <script>
-    // Register Service Worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function(){
         navigator.serviceWorker.register('./sw.js').catch(function(e){ console.log('SW reg failed', e); });
       });
     }
 
-    // ---- DOM refs (ES5) ----
     var densityRadios = document.querySelectorAll('input[name="densityUnit"]');
     var densityValue = document.getElementById('densityValue');
     var widthValue   = document.getElementById('widthValue');
@@ -196,7 +195,7 @@
       var show = anyHasValue([densityValue, widthValue]);
       var d = toNum(densityValue.value);
       var w = toNum(widthValue.value);
-      var val = ceil(d * w);
+      var val = Math.ceil(d * w);
       warpCount.textContent = show ? (val.toLocaleString('ko-KR') + ' 올') : '—';
     }
 
@@ -209,10 +208,10 @@
       var P = toNum(shrinkPct.value);
 
       var baseSumRaw = L + A;
-      var baseSum = ceil(baseSumRaw);
+      var baseSum = Math.ceil(baseSumRaw);
       var shrinkRaw = baseSumRaw * (P/100);
-      var shrink = ceil(shrinkRaw);
-      var total = ceil(baseSumRaw + F + B + shrinkRaw);
+      var shrink = Math.ceil(shrinkRaw);
+      var total = Math.ceil(baseSumRaw + F + B + shrinkRaw);
       var unit = currentLengthUnit();
 
       lenSum.textContent    = baseSum.toLocaleString('ko-KR');
