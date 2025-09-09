@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>경사/위사 계산기</title>
+  <meta name="theme-color" content="#0b6cf0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <style>
+    :root {
+      --bg:#f7f7fb; --card:#ffffff; --text:#111; --muted:#6b7280; --accent:#0b6cf0; --mint:#DCE6ED;
+      --narrow-min: 56px; --narrow-ideal: 18vw; --narrow-max: 80px;
+    }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; background:#f7f7fb; color:#111; overflow-x:hidden; }
+    .wrap { max-width: 600px; width:100%; margin: 0 auto; padding: 20px 12px 44px; }
+    .card { background:#ffffff; border-radius:16px; padding:18px; box-shadow: 0 6px 24px rgba(0,0,0,.06); }
+    .card + .card { margin-top: 16px; }
+    h1 { font-size: 20px; margin: 2px 0 12px; }
+    .row { display:flex; gap:6px; align-items:center; margin:8px 0; flex-wrap: nowrap; min-width:0; }
+    input[type=number] { padding:8px 10px; border:1px solid #ddd; border-radius:10px; background:#fff; font-size:14px; }
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+    .narrow { width: clamp(var(--narrow-min), var(--narrow-ideal), var(--narrow-max)); flex: 0 1 auto; }
+    .unit { font-weight:700; font-size:13px; }
+    .muted { color: var(--muted); font-size: 12px; }
+    .radios { display:flex; flex-direction: column; align-items:flex-start; gap:6px; width:100%; }
+    .radios label { display:block; width:100%; line-height:1.3; }
+    fieldset { border: 1px solid #eee; border-radius: 12px; padding: 10px; min-width:0; }
+    legend { font-size: 12px; color: var(--muted); padding: 0 6px; white-space:normal; }
+    .result { font-size:16px; font-weight:700; padding:12px; background:#DCE6ED; border-radius:12px; display:flex; justify-content:space-between; align-items:center; width:100%; }
+    .footer-note { margin-top:12px; font-size:12px; color:#6b7280; text-align:center; }
+    .badge { display:inline-block; padding:4px 8px; border-radius:999px; background:#f3f4f6; font-weight:700; font-size:14px; flex-shrink:0; }
+    .equals { font-weight:700; }
+    .copyright { margin-top:6px; font-size:12px; color:#9aa0a6; text-align:center; }
+    @media (max-width: 380px){
+      .row { flex-wrap: wrap; }
+      .equals, .unit, .badge, span { flex: 0 0 auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" id="warpCard">
+      <h1>경사 계산기</h1>
+      <fieldset>
+        <legend>경사 밀도</legend>
+        <div class="row">
+          <div class="radios">
+            <label><input type="radio" name="densityUnit" value="EPC" checked> EPC <span class="muted">(Ends Per Centimeter)</span></label>
+            <label><input type="radio" name="densityUnit" value="EPI"> EPI <span class="muted">(Ends Per Inch)</span></label>
+          </div>
+        </div>
+        <div class="row">
+          <input class="narrow" id="densityValue" type="number" step="0.01" inputmode="decimal" placeholder="예: 18" pattern="[0-9]*">
+          <span class="unit" id="densityUnitShort">EPC</span>
+        </div>
+      </fieldset>
+      <fieldset style="margin-top:10px;">
+        <legend>직물 폭</legend>
+        <div class="row">
+          <input class="narrow" id="widthValue" type="number" step="0.01" inputmode="decimal" placeholder="예: 35" pattern="[0-9]*">
+          <span class="unit" id="widthUnitShort">cm</span>
+        </div>
+      </fieldset>
+      <div class="row" style="margin-top:12px;">
+        <div class="result">
+          <div>필요한 경사 수</div>
+          <div id="warpCount">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="weftCard">
+      <h1>위사 계산기</h1>
+      <fieldset>
+        <legend>직물길이 + 여유분 <span class="muted">(마감처리, 프린지 길이 등)</span></legend>
+        <div class="row">
+          <input class="narrow" id="fabricLen" type="number" step="0.01" inputmode="decimal" placeholder="길이" pattern="[0-9]*">
+          <span class="unit" id="lenUnit1">cm</span>
+          <span>+</span>
+          <input class="narrow" id="allowance" type="number" step="0.01" inputmode="decimal" placeholder="여유" pattern="[0-9]*">
+          <span class="unit" id="lenUnit2">cm</span>
+          <span class="equals">=</span>
+          <span class="badge" id="lenSum">—</span>
+          <span class="unit" id="lenUnit3">cm</span>
+        </div>
+      </fieldset>
+      <fieldset style="margin-top:10px;">
+        <legend>직물 수축 여유분 (%)</legend>
+        <div class="row">
+          <input class="narrow" id="shrinkPct" type="number" step="0.01" inputmode="decimal" placeholder="%" pattern="[0-9]*">
+          <span>%</span>
+          <span class="muted">→ 반영 길이:</span>
+          <span class="badge" id="shrinkLen">—</span>
+          <span class="unit" id="lenUnit6">cm</span>
+        </div>
+      </fieldset>
+      <fieldset style="margin-top:10px;">
+        <legend>직기에 걸리는 길이 앞 + 뒤 <span class="muted">(직기 앞 뒤로 묶이거나 해서 버려지는 실의 길이)</span></legend>
+        <div class="row">
+          <input class="narrow" id="loomFront" type="number" step="0.01" inputmode="decimal" placeholder="앞" pattern="[0-9]*">
+          <span class="unit" id="lenUnit4">cm</span>
+          <span>+</span>
+          <input class="narrow" id="loomBack" type="number" step="0.01" inputmode="decimal" placeholder="뒤" pattern="[0-9]*">
+          <span class="unit" id="lenUnit5">cm</span>
+        </div>
+      </fieldset>
+      <div class="row" style="margin-top:12px;">
+        <div class="result">
+          <div>위사 한 가닥의 길이</div>
+          <div id="weftSingle">—</div>
+        </div>
+      </div>
+    </div>
+
+    <p class="footer-note">• 결과는 작업 편의를 위해 올림(정수) 처리</p>
+    <p class="copyright">© STUDIO ITDA 2025. All rights reserved.</p>
+  </div>
+
+  <script>
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function(){
+        navigator.serviceWorker.register('./sw.js').catch(function(e){ console.log('SW reg failed', e); });
+      });
+    }
+
+    // ---- DOM refs (ES5) ----
+    var densityRadios = document.querySelectorAll('input[name="densityUnit"]');
+    var densityValue = document.getElementById('densityValue');
+    var widthValue   = document.getElementById('widthValue');
+    var densityUnitShort = document.getElementById('densityUnitShort');
+    var widthUnitShort   = document.getElementById('widthUnitShort');
+    var warpCount   = document.getElementById('warpCount');
+
+    var fabricLen = document.getElementById('fabricLen');
+    var allowance = document.getElementById('allowance');
+    var lenSum    = document.getElementById('lenSum');
+    var loomFront = document.getElementById('loomFront');
+    var loomBack  = document.getElementById('loomBack');
+    var shrinkPct = document.getElementById('shrinkPct');
+    var shrinkLen = document.getElementById('shrinkLen');
+    var weftSingle= document.getElementById('weftSingle');
+
+    var lenUnit1 = document.getElementById('lenUnit1');
+    var lenUnit2 = document.getElementById('lenUnit2');
+    var lenUnit3 = document.getElementById('lenUnit3');
+    var lenUnit4 = document.getElementById('lenUnit4');
+    var lenUnit5 = document.getElementById('lenUnit5');
+    var lenUnit6 = document.getElementById('lenUnit6');
+
+    function currentDensityUnit(){
+      for(var i=0; i<densityRadios.length; i++){
+        if(densityRadios[i].checked) return densityRadios[i].value;
+      }
+      return 'EPC';
+    }
+    function currentLengthUnit(){ return currentDensityUnit() === 'EPC' ? 'cm' : 'in'; }
+
+    function hasValue(inp){ return inp && String(inp.value).trim() !== ''; }
+    function anyHasValue(arr){ for(var i=0;i<arr.length;i++){ if(hasValue(arr[i])) return true; } return false; }
+
+    function toNum(v){
+      var s = String(v == null ? '' : v).trim();
+      if(!s) return 0;
+      if(s.indexOf('.') === -1 && s.indexOf(',') !== -1){ s = s.replace(',', '.'); }
+      s = s.replace(/,/g, '').replace(/\s+/g, '');
+      var n = parseFloat(s);
+      return isFinite(n) && n >= 0 ? n : 0;
+    }
+    function ceil(n){ return Math.ceil(n); }
+
+    function updateUnits(){
+      var du = currentDensityUnit();
+      var lu = currentLengthUnit();
+      densityUnitShort.textContent = du;
+      widthUnitShort.textContent   = lu;
+      lenUnit1.textContent = lu; lenUnit2.textContent = lu; lenUnit3.textContent = lu;
+      lenUnit4.textContent = lu; lenUnit5.textContent = lu; lenUnit6.textContent = lu;
+    }
+
+    function recalcWarp(){
+      var show = anyHasValue([densityValue, widthValue]);
+      var d = toNum(densityValue.value);
+      var w = toNum(widthValue.value);
+      var val = ceil(d * w);
+      warpCount.textContent = show ? (val.toLocaleString() + ' 올') : '—';
+    }
+
+    function recalcWeft(){
+      var show = anyHasValue([fabricLen, allowance, loomFront, loomBack, shrinkPct]);
+      var L = toNum(fabricLen.value);
+      var A = toNum(allowance.value);
+      var F = toNum(loomFront.value);
+      var B = toNum(loomBack.value);
+      var P = toNum(shrinkPct.value);
+
+      var baseSumRaw = L + A;
+      var baseSum = ceil(baseSumRaw);
+      var shrinkRaw = baseSumRaw * (P/100);
+      var shrink = ceil(shrinkRaw);
+      var total = ceil(baseSumRaw + F + B + shrinkRaw);
+      var unit = currentLengthUnit();
+
+      lenSum.textContent    = show ? baseSum.toLocaleString() : '—';
+      shrinkLen.textContent = show ? shrink.toLocaleString() : '—';
+      weftSingle.textContent= show ? (total.toLocaleString() + ' ' + unit) : '—';
+    }
+
+    function recalcAll(){ updateUnits(); recalcWarp(); recalcWeft(); }
+
+    function wireInput(el){
+      if(!el) return;
+      el.addEventListener('input', recalcAll, false);
+      el.addEventListener('keyup', recalcAll, false);
+      el.addEventListener('change', recalcAll, false);
+    }
+
+    for(var i=0;i<densityRadios.length;i++){
+      densityRadios[i].addEventListener('change', recalcAll, false);
+      densityRadios[i].addEventListener('click', recalcAll, false);
+      densityRadios[i].addEventListener('input', recalcAll, false);
+    }
+    wireInput(densityValue);
+    wireInput(widthValue);
+    wireInput(fabricLen);
+    wireInput(allowance);
+    wireInput(loomFront);
+    wireInput(loomBack);
+    wireInput(shrinkPct);
+
+    recalcAll();
+  </script>
+</body>
+</html>
