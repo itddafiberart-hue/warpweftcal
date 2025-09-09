@@ -24,7 +24,7 @@
     .row { display:flex; gap:6px; align-items:center; margin:8px 0; flex-wrap:nowrap; min-width:0; }
     input[type=number] { padding:8px 10px; border:1px solid #ddd; border-radius:10px; background:#fff; font-size:14px; }
     input[type=number]::-webkit-outer-spin-button,
-    input[type=number]::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+    input[type=number]::-webkit-inner-spin_button { -webkit-appearance:none; margin:0; }
     input[type=number] { -moz-appearance:textfield; }
     .narrow { width:clamp(var(--narrow-min), var(--narrow-ideal), var(--narrow-max)); flex:0 1 auto; }
     .narrow.xs { width:clamp(52px, 16vw, 72px); }
@@ -89,7 +89,7 @@
       </div>
     </div>
 
-    <!-- 위사 계산기 -->
+    <!-- 위사 계산기 (항상 cm 고정) -->
     <div class="card" id="weftCard">
       <div class="card-head">
         <h1>위사 계산기</h1>
@@ -190,10 +190,12 @@
     function updateUnits(){
       var du = currentDensityUnit();
       var lu = currentLengthUnit();
+      // Warp width unit follows EPC/EPI
       densityUnitShort.textContent = du;
       widthUnitShort.textContent   = lu;
-      lenUnit1.textContent = lu; lenUnit2.textContent = lu; lenUnit3.textContent = lu;
-      lenUnit4.textContent = lu; lenUnit5.textContent = lu; lenUnit6.textContent = lu;
+      // Weft units fixed to cm
+      lenUnit1.textContent = 'cm'; lenUnit2.textContent = 'cm'; lenUnit3.textContent = 'cm';
+      lenUnit4.textContent = 'cm'; lenUnit5.textContent = 'cm'; lenUnit6.textContent = 'cm';
     }
 
     function recalcWarp(){
@@ -217,11 +219,10 @@
       var shrinkRaw = baseSumRaw * (P/100);
       var shrink = ceil(shrinkRaw);
       var total = ceil(baseSumRaw + F + B + shrinkRaw);
-      var unit = currentLengthUnit();
 
       lenSum.textContent    = baseSum.toLocaleString('ko-KR');
       shrinkLen.textContent = shrink.toLocaleString('ko-KR');
-      weftSingle.textContent= total.toLocaleString('ko-KR') + ' ' + unit;
+      weftSingle.textContent= total.toLocaleString('ko-KR') + ' cm';
     }
 
     function recalcAll(){ updateUnits(); recalcWarp(); recalcWeft(); }
