@@ -1,6 +1,6 @@
 {
-  "name": "STUDIO ITDA WeaveCalc",
-  "short_name": "ITDA WeaveCalc",
+  "name": "Warp/Weft Calculator",
+  "short_name": "WeaveCalc",
   "description": "경사/위사 계산기 (EPC/EPI, 폭/길이/여유/수축 포함)",
   "lang": "ko",
   "start_url": ".",

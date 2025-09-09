@@ -3,11 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>STUDIO ITDA WeaveCalc</title>
+  <title>경사/위사 계산기</title>
   <meta name="theme-color" content="#f7f7fb">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="STUDIO ITDA WeaveCalc">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <style>
@@ -27,6 +26,7 @@
     input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
     .narrow { width: clamp(var(--narrow-min), var(--narrow-ideal), var(--narrow-max)); flex: 0 1 auto; }
+    .narrow.xs { width: clamp(52px, 16vw, 72px); } /* slightly narrower for first weft row */
     .unit { font-weight:700; font-size:13px; }
     .muted { color: var(--muted); }
     .small { font-size: 12px; }
@@ -34,16 +34,17 @@
     .radios label { display:block; width:100%; line-height:1.3; }
     fieldset { border: 1px solid #eee; border-radius: 12px; padding: 10px; min-width:0; }
     legend { font-size: 12px; color: var(--muted); padding: 0 6px; white-space:normal; }
-    .legend-sub { display:block; margin-top: 4px; font-size:11px; }
     .result { font-size:16px; font-weight:700; padding:12px; background:#DCE6ED; border-radius:12px; display:flex; justify-content:space-between; align-items:center; width:100%; }
-    .result .small { font-weight:400; }
+    .result .small { font-weight:400; } /* ensure small text isn't bold */
     .badge { display:inline-block; padding:4px 8px; border-radius:999px; background:#f3f4f6; font-weight:700; font-size:14px; flex-shrink:0; }
     .equals { font-weight:700; }
     .nowrap-group { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; flex-shrink:0; }
+    .no-wrap-row { flex-wrap: nowrap !important; gap:4px; } /* keep on one line */
     .copyright { margin-top:6px; font-size:12px; color:#9aa0a6; text-align:center; }
     @media (max-width: 380px){
       .row { flex-wrap: wrap; }
       .equals, .unit, .badge, span { flex: 0 0 auto; }
+      .no-wrap-row { flex-wrap: nowrap !important; } /* override breakpoint for the first weft row */
     }
   </style>
 </head>
@@ -86,11 +87,11 @@
       <!-- 1) 직물의 총 길이 + 여유분 -->
       <fieldset>
         <legend>직물의 총 길이 + 여유분 <span class="muted small">(마감처리, 프린지 길이 등)</span></legend>
-        <div class="row">
-          <input class="narrow" id="fabricLen" type="number" step="0.01" inputmode="decimal" placeholder="길이">
+        <div class="row no-wrap-row">
+          <input class="narrow xs" id="fabricLen" type="number" step="0.01" inputmode="decimal" placeholder="길이">
           <span class="unit" id="lenUnit1">cm</span>
           <span>+</span>
-          <input class="narrow" id="allowance" type="number" step="0.01" inputmode="decimal" placeholder="여유">
+          <input class="narrow xs" id="allowance" type="number" step="0.01" inputmode="decimal" placeholder="여유">
           <span class="unit" id="lenUnit2">cm</span>
           <span class="equals">=</span>
           <span class="nowrap-group"><span class="badge" id="lenSum">—</span><span class="unit" id="lenUnit3">cm</span></span>
@@ -108,7 +109,7 @@
       </fieldset>
       <!-- 3) 직기에 걸리는 길이 앞 + 뒤 -->
       <fieldset style="margin-top:10px;">
-        <legend>직기에 걸리는 길이 앞 + 뒤<div class="legend-sub muted">직기 앞, 뒤로 버려질 길이</div></legend>
+        <legend>직기에 걸리는 길이 앞 + 뒤 <span class="muted small">(직기 앞, 뒤로 버려질 길이)</span></legend>
         <div class="row">
           <input class="narrow" id="loomFront" type="number" step="0.01" inputmode="decimal" placeholder="앞">
           <span class="unit" id="lenUnit4">cm</span>
@@ -138,6 +139,7 @@
       });
     }
 
+    // ---- DOM refs (ES5) ----
     var densityRadios = document.querySelectorAll('input[name="densityUnit"]');
     var densityValue = document.getElementById('densityValue');
     var widthValue   = document.getElementById('widthValue');
