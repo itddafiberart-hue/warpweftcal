@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Weave Calculator · 경사 계산기</title>
   <meta name="theme-color" content="#f7f7fb">
-  <link rel="manifest" href="manifest.webmanifest">
   <style>
     :root {
       --bg:#f7f7fb; --card:#ffffff; --text:#111; --muted:#6b7280; --accent:#0b6cf0; --mint:#DCE6ED;
@@ -14,9 +13,10 @@
     }
     * { box-sizing:border-box; }
     body { margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif; background:#f7f7fb; color:#111; overflow-x:hidden; }
-    .wrap { max-width:600px; width:100%; margin:0 auto; padding:20px 12px; }
+    .wrap { max-width:600px; width:100%; margin:0 auto; padding:20px 12px 40px; }
     .card { background:#ffffff; border-radius:16px; padding:18px; box-shadow:0 6px 24px rgba(0,0,0,.06); position:relative; }
-    .card-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+    .card + .card { margin-top:14px; }
+    .card-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
     h1 { font-size:14px; margin:0; }
     .icon-btn { border:none; background:transparent; padding:6px; border-radius:999px; line-height:0; cursor:pointer; }
     .icon-btn:hover { background:#eef2f7; }
@@ -41,26 +41,36 @@
     .equals { font-weight:700; }
     .nowrap-group { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; flex-shrink:0; }
     .no-wrap-row { flex-wrap:nowrap !important; gap:4px; }
+    /* Pixel-perfect rules */
     hr { border:0; height:0; }
-    .rule { border-top:1px solid rgba(107,114,128,0.15); margin:28px 0; }
-    .copyright { margin-top:6px; font-size:12px; color:#9aa0a6; text-align:center; }
+    .rule-strong { border-top:1px solid rgba(107,114,128,0.79); margin:28px 0; }
+    .copyright { margin-top:10px; font-size:12px; color:#9aa0a6; text-align:center; }
+    @media (max-width:380px){
+      .row { flex-wrap:wrap; }
+      .equals, .unit, .badge, span { flex:0 0 auto; }
+      .no-wrap-row { flex-wrap:nowrap !important; }
+    }
   </style>
 </head>
 <body>
+  <!-- Optional: keep SW registration so replacing only index.html works in PWA setup -->
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('./sw.js');
-      });
+      window.addEventListener('load', function() { navigator.serviceWorker.register('./sw.js'); });
     }
   </script>
   <div class="wrap">
-    <div class="card" id="warpCard">
+
+    <!-- Card 1: Title only -->
+    <div class="card" id="titleCard">
       <div class="card-head">
         <h1>Weave Calculator · 경사 계산기</h1>
         <button class="icon-btn" id="resetAll" aria-label="초기화" title="초기화"><span class="sym">↻</span></button>
       </div>
+    </div>
 
+    <!-- Card 2: Density, Width, Needed Ends -->
+    <div class="card" id="setupCard">
       <fieldset>
         <legend>경사 밀도</legend>
         <div class="row">
@@ -93,8 +103,11 @@
         </div>
       </div>
 
-      <hr class="rule">
+      <hr class="rule-strong">
+    </div>
 
+    <!-- Card 3: Lengths & Warp single -->
+    <div class="card" id="lengthCard">
       <fieldset>
         <legend>직물의 총 길이 + 여유분 <span class="muted small">(마감처리, 프린지 길이 등)</span></legend>
         <div class="row no-wrap-row">
@@ -139,9 +152,12 @@
         </div>
       </div>
 
-      <hr class="rule">
+      <hr class="rule-strong">
+    </div>
 
-      <div class="row" style="margin-top:11px;">
+    <!-- Card 4: Total warp length -->
+    <div class="card" id="totalCard">
+      <div class="row" style="margin-top:0;">
         <div class="result" id="warpTotalBox" style="flex-direction:column; align-items:stretch; gap:6px;">
           <div class="row" style="margin:0; justify-content:space-between; width:100%;">
             <div>경사의 총 길이</div>
@@ -150,13 +166,13 @@
           <div class="muted small">작업에 소요되는 경사의 길이로 단색 경사의 계산값</div>
         </div>
       </div>
-
     </div>
 
     <p class="copyright">© STUDIO ITDA 2025. All rights reserved.</p>
   </div>
 
   <script>
+    // --- Element refs ---
     var densityRadios = document.querySelectorAll('input[name="densityUnit"]');
     var densityValue = document.getElementById('densityValue');
     var widthValue   = document.getElementById('widthValue');
@@ -174,6 +190,7 @@
     var warpSingle= document.getElementById('warpSingle');
     var warpTotalLen = document.getElementById('warpTotalLen');
 
+    // --- Helpers ---
     function currentDensityUnit(){
       for(var i=0; i<densityRadios.length; i++){
         if(densityRadios[i].checked) return densityRadios[i].value;
@@ -195,6 +212,7 @@
     }
     function ceil(n){ return Math.ceil(n); }
 
+    // --- Calculations ---
     function updateUnits(){
       var du = currentDensityUnit();
       var lu = currentLengthUnit();
@@ -205,7 +223,7 @@
     function computeWarpEnds(){
       var d = toNum(densityValue.value);
       var w = toNum(widthValue.value);
-      return Math.ceil(d * w);
+      return ceil(d * w);
     }
 
     function computeWarpSingle(){
@@ -216,13 +234,13 @@
       var P = toNum(shrinkPct.value);
       var baseSumRaw = L + A;
       var shrinkRaw = baseSumRaw * (P/100);
-      return Math.ceil(baseSumRaw + F + B + shrinkRaw);
+      return ceil(baseSumRaw + F + B + shrinkRaw);
     }
 
     function recalcWarpEnds(){
       var show = anyHasValue([densityValue, widthValue]);
       var val = computeWarpEnds();
-      document.getElementById('warpEnds').textContent = show ? (val.toLocaleString('ko-KR') + ' 올') : '—';
+      warpEnds.textContent = show ? (val.toLocaleString('ko-KR') + ' 올') : '—';
     }
 
     function recalcWarpSingle(){
@@ -231,27 +249,27 @@
       var A = toNum(allowance.value);
       var P = toNum(shrinkPct.value);
       var baseSumRaw = L + A;
-      var baseSum = Math.ceil(baseSumRaw);
+      var baseSum = ceil(baseSumRaw);
       var shrinkRaw = baseSumRaw * (P/100);
-      var shrink = Math.ceil(shrinkRaw);
+      var shrink = ceil(shrinkRaw);
       var total = computeWarpSingle();
 
-      document.getElementById('lenSum').textContent = baseSum.toLocaleString('ko-KR');
-      document.getElementById('shrinkLen').textContent = shrink.toLocaleString('ko-KR');
-      document.getElementById('warpSingle').textContent = show ? (total.toLocaleString('ko-KR') + ' cm') : '—';
+      lenSum.textContent    = baseSum.toLocaleString('ko-KR');
+      shrinkLen.textContent = shrink.toLocaleString('ko-KR');
+      warpSingle.textContent= show ? (total.toLocaleString('ko-KR') + ' cm') : '—';
     }
 
     function recalcTotal(){
       var endsShow = anyHasValue([densityValue, widthValue]);
       var lenShow  = anyHasValue([fabricLen, allowance, loomFront, loomBack, shrinkPct]);
       if(!endsShow || !lenShow){
-        document.getElementById('warpTotalLen').textContent = '—';
+        warpTotalLen.textContent = '—';
         return;
       }
       var ends = computeWarpEnds();
       var single = computeWarpSingle(); // cm
       var total = ends * single;
-      document.getElementById('warpTotalLen').textContent = total.toLocaleString('ko-KR');
+      warpTotalLen.textContent = total.toLocaleString('ko-KR');
     }
 
     function recalcAll(){ updateUnits(); recalcWarpEnds(); recalcWarpSingle(); recalcTotal(); }
@@ -263,30 +281,26 @@
       el.addEventListener('change', recalcAll, false);
     }
 
-    var densityRadios = document.querySelectorAll('input[name="densityUnit"]');
     for(var i=0;i<densityRadios.length;i++){
       densityRadios[i].addEventListener('change', recalcAll, false);
       densityRadios[i].addEventListener('click', recalcAll, false);
       densityRadios[i].addEventListener('input', recalcAll, false);
     }
-    wireInput(document.getElementById('densityValue'));
-    wireInput(document.getElementById('widthValue'));
-    wireInput(document.getElementById('fabricLen'));
-    wireInput(document.getElementById('allowance'));
-    wireInput(document.getElementById('loomFront'));
-    wireInput(document.getElementById('loomBack'));
-    wireInput(document.getElementById('shrinkPct'));
+    wireInput(densityValue);
+    wireInput(widthValue);
+    wireInput(fabricLen);
+    wireInput(allowance);
+    wireInput(loomFront);
+    wireInput(loomBack);
+    wireInput(shrinkPct);
 
+    // Reset
     document.getElementById('resetAll').addEventListener('click', function(){
       for(var i=0;i<densityRadios.length;i++){ densityRadios[i].checked = (densityRadios[i].value === 'EPC'); }
-      document.getElementById('densityValue').value='';
-      document.getElementById('widthValue').value='';
-      document.getElementById('fabricLen').value='';
-      document.getElementById('allowance').value='';
-      document.getElementById('shrinkPct').value='';
-      document.getElementById('loomFront').value='';
-      document.getElementById('loomBack').value='';
+      densityValue.value=''; widthValue.value='';
+      fabricLen.value=''; allowance.value=''; shrinkPct.value=''; loomFront.value=''; loomBack.value='';
       recalcAll();
+      window.scrollTo({top:0, behavior:'smooth'});
     }, false);
 
     recalcAll();
