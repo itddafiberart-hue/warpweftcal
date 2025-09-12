@@ -1,6 +1,6 @@
 // WeaveCalc Service Worker - network-first for HTML
 // Bump CACHE_NAME on each release for auto-updates.
-const CACHE_NAME = 'weavecalc-v17';
+const CACHE_NAME = 'weavecalc-v18';
 const CORE = ['./', './index.html', './manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
