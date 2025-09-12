@@ -1,5 +1,5 @@
 // PWA cache v14 (core-only, no icons)
-const CACHE_NAME = 'warpcalc-v16';
+const CACHE_NAME = 'warpcalc-v17';
 const ASSETS = ['./','./index.html','./manifest.webmanifest'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
